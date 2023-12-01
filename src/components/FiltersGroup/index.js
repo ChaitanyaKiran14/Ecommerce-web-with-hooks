@@ -1,90 +1,42 @@
+import {useState, useEffect} from 'react'
 import {BsSearch} from 'react-icons/bs'
-
 import './index.css'
 
 const FiltersGroup = props => {
-  const renderRatingsFiltersList = () => {
-    const {ratingsList} = props
+  const {
+    ratingsList,
+    categoryOptions,
+    activeRatingId,
+    activeCategoryId,
+    searchInput,
+    changeRating,
+    changeCategory,
+    enterSearchInput,
+    changeSearchInput,
+    clearFilters,
+  } = props
+  const [localSearchInput, setLocalSearchInput] = useState(searchInput)
 
-    return ratingsList.map(rating => {
-      const {changeRating, activeRatingId} = props
-      const onClickRatingItem = () => changeRating(rating.ratingId)
-
-      const ratingClassName =
-        activeRatingId === rating.ratingId ? `and-up active-rating` : `and-up`
-
-      return (
-        <li
-          className="rating-item"
-          key={rating.ratingId}
-          onClick={onClickRatingItem}
-        >
-          <img
-            src={rating.imageUrl}
-            alt={`rating ${rating.ratingId}`}
-            className="rating-image"
-          />
-          <p className={ratingClassName}>& up</p>
-        </li>
-      )
-    })
-  }
-
-  const renderRatingsFilters = () => (
-    <div>
-      <h1 className="rating-heading">Rating</h1>
-      <ul className="ratings-list">{renderRatingsFiltersList()}</ul>
-    </div>
-  )
-
-  const renderCategoriesList = () => {
-    const {categoryOptions} = props
-
-    return categoryOptions.map(category => {
-      const {changeCategory, activeCategoryId} = props
-      const onClickCategoryItem = () => changeCategory(category.categoryId)
-      const isActive = category.categoryId === activeCategoryId
-      const categoryClassName = isActive
-        ? `category-name active-category-name`
-        : `category-name`
-
-      return (
-        <li
-          className="category-item"
-          key={category.categoryId}
-          onClick={onClickCategoryItem}
-        >
-          <p className={categoryClassName}>{category.name}</p>
-        </li>
-      )
-    })
-  }
-
-  const renderProductCategories = () => (
-    <>
-      <h1 className="category-heading">Category</h1>
-      <ul className="categories-list">{renderCategoriesList()}</ul>
-    </>
-  )
+  useEffect(() => {
+    setLocalSearchInput(searchInput)
+  }, [searchInput])
 
   const onEnterSearchInput = event => {
-    const {enterSearchInput} = props
     if (event.key === 'Enter') {
       enterSearchInput()
     }
   }
 
   const onChangeSearchInput = event => {
-    const {changeSearchInput} = props
+    setLocalSearchInput(event.target.value)
     changeSearchInput(event.target.value)
   }
 
-  const renderSearchInput = () => {
-    const {searchInput} = props
-    return (
+  return (
+    <div className="filters-group-container">
       <div className="search-input-container">
         <input
-          value={searchInput}
+          value={localSearchInput}
           type="search"
           className="search-input"
           placeholder="Search"
@@ -93,16 +45,62 @@ const FiltersGroup = props => {
         />
         <BsSearch className="search-icon" />
       </div>
-    )
-  }
 
-  const {clearFilters} = props
+      <div>
+        <h1 className="category-heading">Category</h1>
+        <ul className="categories-list">
+          {categoryOptions.map(category => (
+            <li
+              className="category-item"
+              key={category.categoryId}
+              onClick={() => changeCategory(category.categoryId)}
+            >
+              <p
+                className={
+                  category.categoryId === activeCategoryId
+                    ? 'category-name active-category-name'
+                    : 'category-name'
+                }
+              >
+                {category.name}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </div>
 
-  return (
-    <div className="filters-group-container">
-      {renderSearchInput()}
-      {renderProductCategories()}
-      {renderRatingsFilters()}
+      <div>
+        <h1 className="rating-heading">Rating</h1>
+        <ul className="ratings-list">
+          {ratingsList.map(rating => (
+            <li
+              className="rating-item"
+              key={rating.ratingId}
+              onClick={() => changeRating(rating.ratingId)}
+            >
+              <img
+                src={rating.imageUrl}
+                alt={`rating ${rating.ratingId}`}
+                className={
+                  activeRatingId === rating.ratingId
+                    ? 'rating-image and-up active-rating'
+                    : 'rating-image and-up'
+                }
+              />
+              <p
+                className={
+                  activeRatingId === rating.ratingId
+                    ? 'and-up active-rating'
+                    : 'and-up'
+                }
+              >
+                & up
+              </p>
+            </li>
+          ))}
+        </ul>
+      </div>
+
       <button
         type="button"
         className="clear-filters-btn"
