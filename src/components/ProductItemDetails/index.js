@@ -1,35 +1,31 @@
-import {Component} from 'react'
-import Cookies from 'js-cookie'
-import Loader from 'react-loader-spinner'
-import {BsPlusSquare, BsDashSquare} from 'react-icons/bs'
+import React, { useState, useEffect, useContext } from 'react';
+import Cookies from 'js-cookie';
+import Loader from 'react-loader-spinner';
+import { BsPlusSquare, BsDashSquare } from 'react-icons/bs';
 
-import CartContext from '../../context/CartContext'
-
-import Header from '../Header'
-import SimilarProductItem from '../SimilarProductItem'
-
-import './index.css'
+import CartContext from '../../context/CartContext';
+import Header from '../Header';
+import SimilarProductItem from '../SimilarProductItem';
+import './index.css';
 
 const apiStatusConstants = {
   initial: 'INITIAL',
   success: 'SUCCESS',
   failure: 'FAILURE',
   inProgress: 'IN_PROGRESS',
-}
+};
 
-class ProductItemDetails extends Component {
-  state = {
-    productData: {},
-    similarProductsData: [],
-    apiStatus: apiStatusConstants.initial,
-    quantity: 1,
-  }
+const ProductItemDetails = ({ match }) => {
+  const [productData, setProductData] = useState({});
+  const [similarProductsData, setSimilarProductsData] = useState([]);
+  const [apiStatus, setApiStatus] = useState(apiStatusConstants.initial);
+  const [quantity, setQuantity] = useState(1);
 
-  componentDidMount() {
-    this.getProductData()
-  }
+  useEffect(() => {
+    getProductData();
+  }, [match]);
 
-  getFormattedData = data => ({
+  const getFormattedData = (data) => ({
     availability: data.availability,
     brand: data.brand,
     description: data.description,
@@ -39,51 +35,60 @@ class ProductItemDetails extends Component {
     rating: data.rating,
     title: data.title,
     totalReviews: data.total_reviews,
-  })
+  });
 
-  getProductData = async () => {
-    const {match} = this.props
-    const {params} = match
-    const {id} = params
+  const getProductData = async () => {
+    const { params } = match;
+    const { id } = params;
 
-    this.setState({
-      apiStatus: apiStatusConstants.inProgress,
-    })
-    const jwtToken = Cookies.get('jwt_token')
-    const apiUrl = `https://apis.ccbp.in/products/${id}`
+    setApiStatus(apiStatusConstants.inProgress);
+
+    const jwtToken = Cookies.get('jwt_token');
+    const apiUrl = `https://apis.ccbp.in/products/${id}`;
     const options = {
       headers: {
         Authorization: `Bearer ${jwtToken}`,
       },
       method: 'GET',
-    }
-    const response = await fetch(apiUrl, options)
-    if (response.ok) {
-      const fetchedData = await response.json()
-      const updatedData = this.getFormattedData(fetchedData)
-      const updatedSimilarProductsData = fetchedData.similar_products.map(
-        eachSimilarProduct => this.getFormattedData(eachSimilarProduct),
-      )
-      this.setState({
-        productData: updatedData,
-        similarProductsData: updatedSimilarProductsData,
-        apiStatus: apiStatusConstants.success,
-      })
-    }
-    if (response.status === 404) {
-      this.setState({
-        apiStatus: apiStatusConstants.failure,
-      })
-    }
-  }
+    };
 
-  renderLoadingView = () => (
+    try {
+      const response = await fetch(apiUrl, options);
+      if (response.ok) {
+        const fetchedData = await response.json();
+        const updatedData = getFormattedData(fetchedData);
+        const updatedSimilarProductsData = fetchedData.similar_products.map(
+          (eachSimilarProduct) => getFormattedData(eachSimilarProduct)
+        );
+        setProductData(updatedData);
+        setSimilarProductsData(updatedSimilarProductsData);
+        setApiStatus(apiStatusConstants.success);
+      } else if (response.status === 404) {
+        setApiStatus(apiStatusConstants.failure);
+      }
+    } catch (error) {
+      console.error('Error fetching product data:', error);
+      setApiStatus(apiStatusConstants.failure);
+    }
+  };
+
+  const onDecrementQuantity = () => {
+    if (quantity > 1) {
+      setQuantity((prevQuantity) => prevQuantity - 1);
+    }
+  };
+
+  const onIncrementQuantity = () => {
+    setQuantity((prevQuantity) => prevQuantity + 1);
+  };
+
+  const renderLoadingView = () => (
     <div className="products-details-loader-container">
       <Loader type="ThreeDots" color="#0b69ff" height="50" width="50" />
     </div>
-  )
+  );
 
-  renderFailureView = () => (
+  const renderFailureView = () => (
     <div className="product-details-error-view-container">
       <img
         alt="error view"
@@ -95,23 +100,11 @@ class ProductItemDetails extends Component {
         Continue Shopping
       </button>
     </div>
-  )
+  );
 
-  onDecrementQuantity = () => {
-    const {quantity} = this.state
-    if (quantity > 1) {
-      this.setState(prevState => ({quantity: prevState.quantity - 1}))
-    }
-  }
-
-  onIncrementQuantity = () => {
-    this.setState(prevState => ({quantity: prevState.quantity + 1}))
-  }
-
-  renderProductDetailsView = () => (
+  const renderProductDetailsView = () => (
     <CartContext.Consumer>
-      {value => {
-        const {productData, quantity, similarProductsData} = this.state
+      {(value) => {
         const {
           availability,
           brand,
@@ -121,11 +114,11 @@ class ProductItemDetails extends Component {
           rating,
           title,
           totalReviews,
-        } = productData
-        const {addCartItem} = value
+        } = productData;
+        const { addCartItem } = value;
         const onClickAddToCart = () => {
-          addCartItem({...productData, quantity})
-        }
+          addCartItem({ ...productData, quantity });
+        };
 
         return (
           <div className="product-details-success-view">
@@ -159,7 +152,7 @@ class ProductItemDetails extends Component {
                   <button
                     type="button"
                     className="quantity-controller-button"
-                    onClick={this.onDecrementQuantity}
+                    onClick={onDecrementQuantity}
                   >
                     <BsDashSquare className="quantity-controller-icon" />
                   </button>
@@ -167,7 +160,7 @@ class ProductItemDetails extends Component {
                   <button
                     type="button"
                     className="quantity-controller-button"
-                    onClick={this.onIncrementQuantity}
+                    onClick={onIncrementQuantity}
                   >
                     <BsPlusSquare className="quantity-controller-icon" />
                   </button>
@@ -183,7 +176,7 @@ class ProductItemDetails extends Component {
             </div>
             <h1 className="similar-products-heading">Similar Products</h1>
             <ul className="similar-products-list">
-              {similarProductsData.map(eachSimilarProduct => (
+              {similarProductsData.map((eachSimilarProduct) => (
                 <SimilarProductItem
                   productDetails={eachSimilarProduct}
                   key={eachSimilarProduct.id}
@@ -191,36 +184,30 @@ class ProductItemDetails extends Component {
               ))}
             </ul>
           </div>
-        )
+        );
       }}
     </CartContext.Consumer>
-  )
+  );
 
-  renderProductDetails = () => {
-    const {apiStatus} = this.state
-
+  const renderProductDetails = () => {
     switch (apiStatus) {
       case apiStatusConstants.success:
-        return this.renderProductDetailsView()
+        return renderProductDetailsView();
       case apiStatusConstants.failure:
-        return this.renderFailureView()
+        return renderFailureView();
       case apiStatusConstants.inProgress:
-        return this.renderLoadingView()
+        return renderLoadingView();
       default:
-        return null
+        return null;
     }
-  }
+  };
 
-  render() {
-    return (
-      <>
-        <Header />
-        <div className="product-item-details-container">
-          {this.renderProductDetails()}
-        </div>
-      </>
-    )
-  }
-}
+  return (
+    <>
+      <Header />
+      <div className="product-item-details-container">{renderProductDetails()}</div>
+    </>
+  );
+};
 
-export default ProductItemDetails
+export default ProductItemDetails;
