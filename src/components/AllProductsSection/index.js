@@ -73,17 +73,17 @@ const apiStatusConstants = {
 }
 
 const AllProductsSection = () => {
+
   const [productsList, setProductsList] = useState([])
   const [apiStatus, setApiStatus] = useState(apiStatusConstants.initial)
-  const [activeOptionId, setActiveOptionId] = useState(
-    sortbyOptions[0].optionId,
-  )
+  const [activeOptionId, setActiveOptionId] = useState( sortbyOptions[0].optionId, )
   const [activeCategoryId, setActiveCategoryId] = useState('')
   const [searchInput, setSearchInput] = useState('')
   const [activeRatingId, setActiveRatingId] = useState('')
 
   const getProducts = useCallback(async () => {
     setApiStatus(apiStatusConstants.inProgress)
+    
     const jwtToken = Cookies.get('jwt_token')
     const apiUrl = `https://apis.ccbp.in/products?sort_by=${activeOptionId}&category=${activeCategoryId}&title_search=${searchInput}&rating=${activeRatingId}`
 
@@ -162,16 +162,12 @@ const AllProductsSection = () => {
     </div>
   )
 
-  const renderProductsListView = () => {
+  const renderProductsListView = () => { 
     const shouldShowProductsList = productsList.length > 0
 
     return shouldShowProductsList ? (
       <div className="all-products-container">
-        <ProductsHeader
-          activeOptionId={activeOptionId}
-          sortbyOptions={sortbyOptions}
-          changeSortby={changeSortby}
-        />
+        <ProductsHeader activeOptionId={activeOptionId} sortbyOptions={sortbyOptions} changeSortby={changeSortby} />
         <ul className="products-list">
           {productsList.map(product => (
             <ProductCard productData={product} key={product.id} />
@@ -215,15 +211,21 @@ const AllProductsSection = () => {
   return (
     <div className="all-products-section">
       <FiltersGroup
-        searchInput={searchInput}
+
         categoryOptions={categoryOptions}
         ratingsList={ratingsList}
+
+        searchInput={searchInput}
+
         changeSearchInput={changeSearchInput}
         enterSearchInput={enterSearchInput}
+
         activeCategoryId={activeCategoryId}
         activeRatingId={activeRatingId}
+
         changeCategory={changeCategory}
         changeRating={changeRating}
+
         clearFilters={clearFilters}
       />
       {renderAllProducts()}
